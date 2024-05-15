@@ -3,6 +3,8 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import GUI from 'lil-gui';
 import testVertexShader from './shaders/test/vertex.glsl';
 import testFragmentShader from './shaders/test/fragment.glsl';
+import particlesVertexShader from './shaders/particles/vertex.glsl';
+import particlesFragmentShader from './shaders/particles/fragment.glsl';
 
 /**
  * Base
@@ -17,12 +19,21 @@ const canvas = document.querySelector('canvas.webgl');
 const scene = new THREE.Scene();
 
 /**
+ * Sizes
+ */
+const sizes = {
+  width: window.innerWidth,
+  height: window.innerHeight,
+  pixelRatio: Math.min(window.devicePixelRatio, 2)
+};
+
+/**
  * Test mesh
  */
 // Geometry
 const geometry = new THREE.PlaneGeometry(1, 1, 32, 32);
 
-// Material
+// Test shader material
 const material = new THREE.ShaderMaterial({
   vertexShader: testVertexShader,
   fragmentShader: testFragmentShader,
@@ -36,20 +47,38 @@ const material = new THREE.ShaderMaterial({
 
 // Mesh
 const mesh = new THREE.Mesh(geometry, material);
-scene.add(mesh);
+// scene.add(mesh);
 
 /**
- * Sizes
+ * Particles Shader
  */
-const sizes = {
-  width: window.innerWidth,
-  height: window.innerHeight
-};
+const particlesGeometry = new THREE.PlaneGeometry(10, 10, 32, 32);
+const particlesMaterial = new THREE.ShaderMaterial({
+  vertexShader: particlesVertexShader,
+  fragmentShader: particlesFragmentShader,
+  uniforms: {
+    uResolution: new THREE.Uniform(
+      new THREE.Vector2(
+        sizes.width * sizes.pixelRatio,
+        sizes.height * sizes.pixelRatio
+      )
+    )
+  }
+});
+const particles = new THREE.Points(particlesGeometry, particlesMaterial);
+scene.add(particles);
 
 window.addEventListener('resize', () => {
   // Update sizes
   sizes.width = window.innerWidth;
   sizes.height = window.innerHeight;
+  sizes.pixelRatio = Math.min(window.devicePixelRatio, 2);
+
+  // update uniforms
+  particlesMaterial.uniforms.uResolution.value.set(
+    sizes.width * sizes.pixelRatio,
+    sizes.height * sizes.pixelRatio
+  );
 
   // Update camera
   camera.aspect = sizes.width / sizes.height;
@@ -57,7 +86,7 @@ window.addEventListener('resize', () => {
 
   // Update renderer
   renderer.setSize(sizes.width, sizes.height);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setPixelRatio(sizes.pixelRatio);
 });
 
 /**
@@ -65,12 +94,12 @@ window.addEventListener('resize', () => {
  */
 // Base camera
 const camera = new THREE.PerspectiveCamera(
-  75,
+  35,
   sizes.width / sizes.height,
   0.1,
   100
 );
-camera.position.set(0.25, -0.25, 1);
+camera.position.set(0, 0, 18);
 scene.add(camera);
 
 // Controls
@@ -81,10 +110,12 @@ controls.enableDamping = true;
  * Renderer
  */
 const renderer = new THREE.WebGLRenderer({
-  canvas: canvas
+  canvas: canvas,
+  antialias: true
 });
+renderer.setClearColor('#181818');
 renderer.setSize(sizes.width, sizes.height);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setPixelRatio(sizes.pixelRatio);
 
 /**
  * Animate
