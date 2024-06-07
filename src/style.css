@@ -17,8 +17,8 @@ body {
 
 .overlay-canvas {
   position: fixed;
-  width: 512px;
-  height: 512px;
+  width: 256px;
+  height: 256px;
   top: 0;
   left: 0;
   z-index: 10;

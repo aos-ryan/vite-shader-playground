@@ -75,6 +75,7 @@ displacement.interactivePlane = new THREE.Mesh(
   new THREE.PlaneGeometry(10, 10),
   new THREE.MeshBasicMaterial({ color: 'red' })
 );
+displacement.interactivePlane.visible = false;
 scene.add(displacement.interactivePlane);
 
 // glow image
@@ -92,10 +93,33 @@ window.addEventListener('pointermove', (e) => {
   displacement.screenCursor.y = -(event.clientY / sizes.height) * 2 + 1;
 });
 
+displacement.texture = new THREE.CanvasTexture(displacement.canvas);
+
 /**
  * Particles Shader
  */
 const particlesGeometry = new THREE.PlaneGeometry(10, 10, 128, 128);
+
+const intensitiesArray = new Float32Array(
+  particlesGeometry.attributes.position.count
+);
+const anglesArray = new Float32Array(
+  particlesGeometry.attributes.position.count
+);
+
+for (let i = 0; i < particlesGeometry.attributes.position.count; i++) {
+  intensitiesArray[i] = Math.random();
+  anglesArray[i] = Math.random() * Math.PI * 2;
+}
+particlesGeometry.setAttribute(
+  'aIntensity',
+  new THREE.BufferAttribute(intensitiesArray, 1)
+);
+particlesGeometry.setAttribute(
+  'aAngle',
+  new THREE.BufferAttribute(anglesArray, 1)
+);
+
 const particlesMaterial = new THREE.ShaderMaterial({
   vertexShader: particlesVertexShader,
   fragmentShader: particlesFragmentShader,
@@ -106,7 +130,8 @@ const particlesMaterial = new THREE.ShaderMaterial({
         sizes.height * sizes.pixelRatio
       )
     ),
-    uPictureTexture: new THREE.Uniform(textureLoader.load('./ze.png'))
+    uPictureTexture: new THREE.Uniform(textureLoader.load('./ze.png')),
+    uDisplacementTexture: new THREE.Uniform(displacement.texture)
   }
 });
 const particles = new THREE.Points(particlesGeometry, particlesMaterial);
@@ -184,8 +209,33 @@ const tick = () => {
   );
   if (intersections.length) {
     const uv = intersections[0].uv;
-    console.log(uv);
+    displacement.canvasCursor.x = uv.x * displacement.canvas.width;
+    displacement.canvasCursor.y = (1 - uv.y) * displacement.canvas.height;
   }
+  // fade out
+  displacement.context.globalCompositeOperation = 'source-over';
+  displacement.context.globalAlpha = 0.02;
+  displacement.context.fillRect(
+    0,
+    0,
+    displacement.canvas.width,
+    displacement.canvas.height
+  );
+
+  // draw glow
+  const glowSize = displacement.canvas.width * 0.25;
+  displacement.context.globalCompositeOperation = 'lighten';
+  displacement.context.globalAlpha = 1;
+  displacement.context.drawImage(
+    displacement.glowImage,
+    displacement.canvasCursor.x - glowSize * 0.5,
+    displacement.canvasCursor.y - glowSize * 0.5,
+    glowSize,
+    glowSize
+  );
+
+  // Texture
+  displacement.texture.needsUpdate = true;
 
   // Render
   renderer.render(scene, camera);
