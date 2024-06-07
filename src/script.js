@@ -18,6 +18,9 @@ const canvas = document.querySelector('canvas.webgl');
 // Scene
 const scene = new THREE.Scene();
 
+// Texture Loader
+const textureLoader = new THREE.TextureLoader();
+
 /**
  * Sizes
  */
@@ -50,9 +53,49 @@ const mesh = new THREE.Mesh(geometry, material);
 // scene.add(mesh);
 
 /**
+ * Displacement
+ */
+const displacement = {};
+// canvas
+displacement.canvas = document.createElement('canvas');
+displacement.canvas.classList.add('overlay-canvas');
+displacement.canvas.width = 128;
+displacement.canvas.height = 128;
+document.body.append(displacement.canvas);
+// context
+displacement.context = displacement.canvas.getContext('2d');
+displacement.context.fillRect(
+  0,
+  0,
+  displacement.canvas.width,
+  displacement.canvas.height
+);
+// interactive plane
+displacement.interactivePlane = new THREE.Mesh(
+  new THREE.PlaneGeometry(10, 10),
+  new THREE.MeshBasicMaterial({ color: 'red' })
+);
+scene.add(displacement.interactivePlane);
+
+// glow image
+displacement.glowImage = new Image();
+displacement.glowImage.src = './glow.png';
+
+// raycaster
+displacement.raycaster = new THREE.Raycaster();
+// coords
+displacement.screenCursor = new THREE.Vector2(9999, 9999);
+displacement.canvasCursor = new THREE.Vector2(9999, 9999);
+
+window.addEventListener('pointermove', (e) => {
+  displacement.screenCursor.x = (event.clientX / sizes.width) * 2 - 1;
+  displacement.screenCursor.y = -(event.clientY / sizes.height) * 2 + 1;
+});
+
+/**
  * Particles Shader
  */
-const particlesGeometry = new THREE.PlaneGeometry(10, 10, 32, 32);
+const particlesGeometry = new THREE.PlaneGeometry(10, 10, 128, 128);
 const particlesMaterial = new THREE.ShaderMaterial({
   vertexShader: particlesVertexShader,
   fragmentShader: particlesFragmentShader,
@@ -62,7 +105,8 @@ const particlesMaterial = new THREE.ShaderMaterial({
         sizes.width * sizes.pixelRatio,
         sizes.height * sizes.pixelRatio
       )
-    )
+    ),
+    uPictureTexture: new THREE.Uniform(textureLoader.load('./ze.png'))
   }
 });
 const particles = new THREE.Points(particlesGeometry, particlesMaterial);
@@ -132,6 +176,16 @@ const tick = () => {
   material.uniforms.uTime.value = performance.now();
   // Update controls
   controls.update();
+
+  // Raycaster
+  displacement.raycaster.setFromCamera(displacement.screenCursor, camera);
+  const intersections = displacement.raycaster.intersectObject(
+    displacement.interactivePlane
+  );
+  if (intersections.length) {
+    const uv = intersections[0].uv;
+    console.log(uv);
+  }
 
   // Render
   renderer.render(scene, camera);
