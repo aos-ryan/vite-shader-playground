@@ -99,6 +99,8 @@ displacement.texture = new THREE.CanvasTexture(displacement.canvas);
  * Particles Shader
  */
 const particlesGeometry = new THREE.PlaneGeometry(10, 10, 128, 128);
+particlesGeometry.setIndex(null);
+particlesGeometry.deleteAttribute('normal');
 
 const intensitiesArray = new Float32Array(
   particlesGeometry.attributes.position.count
@@ -121,6 +123,7 @@ particlesGeometry.setAttribute(
 );
 
 const particlesMaterial = new THREE.ShaderMaterial({
+  // blending: THREE.AdditiveBlending,
   vertexShader: particlesVertexShader,
   fragmentShader: particlesFragmentShader,
   uniforms: {
