@@ -87,6 +87,7 @@ displacement.raycaster = new THREE.Raycaster();
 // coords
 displacement.screenCursor = new THREE.Vector2(9999, 9999);
 displacement.canvasCursor = new THREE.Vector2(9999, 9999);
+displacement.canvasCursorPrev = new THREE.Vector2(9999, 9999);
 
 window.addEventListener('pointermove', (e) => {
   displacement.screenCursor.x = (event.clientX / sizes.width) * 2 - 1;
@@ -225,10 +226,19 @@ const tick = () => {
     displacement.canvas.height
   );
 
+  // Speed alpha
+  const cursorDistance = displacement.canvasCursorPrev.distanceTo(
+    displacement.canvasCursor
+  );
+  displacement.canvasCursorPrev.copy(displacement.canvasCursor);
+  // clamp to 1 and ensure it doesn't get too "fast"
+  const alpha = Math.min(cursorDistance * 0.1, 1);
+  // console.log(cursorDistance);
+
   // draw glow
   const glowSize = displacement.canvas.width * 0.25;
   displacement.context.globalCompositeOperation = 'lighten';
-  displacement.context.globalAlpha = 1;
+  displacement.context.globalAlpha = alpha;
   displacement.context.drawImage(
     displacement.glowImage,
     displacement.canvasCursor.x - glowSize * 0.5,
