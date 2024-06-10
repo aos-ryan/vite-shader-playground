@@ -10,7 +10,7 @@ void main()
   // displacement
   vec3 newPosition = position;
   float displacementIntensity = texture(uDisplacementTexture, uv).r;
-  displacementIntensity = smoothstep(0.1, 1.0, displacementIntensity);
+  displacementIntensity = smoothstep(0.1, 0.3, displacementIntensity);
 
   vec3 displacement = vec3(cos(aAngle) * 0.2, sin(aAngle) * 0.2, 1.0);
   displacement = normalize(displacement);
