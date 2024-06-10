@@ -42,10 +42,12 @@ window.addEventListener('resize', () => {
   sizes.pixelRatio = Math.min(window.devicePixelRatio, 2);
 
   // Materials
-  particles.material.uniforms.uResolution.value.set(
-    sizes.width * sizes.pixelRatio,
-    sizes.height * sizes.pixelRatio
-  );
+  if (particles) {
+    particles.material.uniforms.uResolution.value.set(
+      sizes.width * sizes.pixelRatio,
+      sizes.height * sizes.pixelRatio
+    );
+  }
 
   // Update camera
   camera.aspect = sizes.width / sizes.height;
@@ -90,35 +92,48 @@ gui.addColor(debugObject, 'clearColor').onChange(() => {
 });
 renderer.setClearColor(debugObject.clearColor);
 
-/**
- * Particles
- */
-const particles = {};
+// Models
+// we need to load the models pefore we access their geometry
+let particles = null;
+// set particles outside of load to handle resize event
+gltfLoader.load('./models.glb', (gltf) => {
+  const particles = {};
 
-// Geometry
-particles.geometry = new THREE.SphereGeometry(3);
-particles.geometry.setIndex(null);
-
-// Material
-particles.material = new THREE.ShaderMaterial({
-  blending: THREE.AdditiveBlending,
-  depthWrite: false,
-  vertexShader: particlesVertexShader,
-  fragmentShader: particlesFragmentShader,
-  uniforms: {
-    uSize: new THREE.Uniform(0.4),
-    uResolution: new THREE.Uniform(
-      new THREE.Vector2(
-        sizes.width * sizes.pixelRatio,
-        sizes.height * sizes.pixelRatio
-      )
-    )
+  // Positions
+  const positions = gltf.scene.children.map((child) => {
+    return child.geometry.attributes.position;
+  });
+  particles.maxCount = 0;
+  for (const position of positions) {
+    if (position.count > particles.maxCount) {
+      particles.maxCount = positions.count;
+    }
   }
-});
+  // Geometry
+  particles.geometry = new THREE.SphereGeometry(3);
+  particles.geometry.setIndex(null);
 
-// Points
-particles.points = new THREE.Points(particles.geometry, particles.material);
-scene.add(particles.points);
+  // Material
+  particles.material = new THREE.ShaderMaterial({
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    vertexShader: particlesVertexShader,
+    fragmentShader: particlesFragmentShader,
+    uniforms: {
+      uSize: new THREE.Uniform(0.4),
+      uResolution: new THREE.Uniform(
+        new THREE.Vector2(
+          sizes.width * sizes.pixelRatio,
+          sizes.height * sizes.pixelRatio
+        )
+      )
+    }
+  });
+
+  // Points
+  particles.points = new THREE.Points(particles.geometry, particles.material);
+  scene.add(particles.points);
+});
 
 /**
  * Animate
