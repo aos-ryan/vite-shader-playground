@@ -93,9 +93,9 @@ gui.addColor(debugObject, 'clearColor').onChange(() => {
 renderer.setClearColor(debugObject.clearColor);
 
 // Models
-// we need to load the models pefore we access their geometry
+// set particles object outside of load to handle resize event
 let particles = null;
-// set particles outside of load to handle resize event
+// we need to load the models before we access their geometry
 gltfLoader.load('./models.glb', (gltf) => {
   const particles = {};
   particles.index = 0;
@@ -136,12 +136,21 @@ gltfLoader.load('./models.glb', (gltf) => {
   console.log(particles.positions);
 
   // Geometry
+  const sizesArray = new Float32Array(particles.maxCount);
+  for (let i = 0; i < particles.maxCount; i++) {
+    sizesArray[i] = Math.random();
+  }
+
   particles.geometry = new THREE.BufferGeometry();
   particles.geometry.setAttribute(
     'position',
     particles.positions[particles.index]
   );
   particles.geometry.setAttribute('aPositionTarget', particles.positions[3]);
+  particles.geometry.setAttribute(
+    'aSize',
+    new THREE.BufferAttribute(sizesArray, 1)
+  );
 
   // Material
   particles.material = new THREE.ShaderMaterial({
@@ -150,7 +159,7 @@ gltfLoader.load('./models.glb', (gltf) => {
     vertexShader: particlesVertexShader,
     fragmentShader: particlesFragmentShader,
     uniforms: {
-      uSize: new THREE.Uniform(0.2),
+      uSize: new THREE.Uniform(0.4),
       uResolution: new THREE.Uniform(
         new THREE.Vector2(
           sizes.width * sizes.pixelRatio,

@@ -4,6 +4,7 @@ uniform vec2 uResolution;
 uniform float uSize;
 uniform float uProgress;
 attribute vec3 aPositionTarget;
+attribute float aSize;
 varying vec3 vColor;
 
 void main()
@@ -32,6 +33,6 @@ void main()
     vColor = vec3(noise);
 
     // Point size
-    gl_PointSize = uSize * uResolution.y;
+    gl_PointSize = aSize* uSize * uResolution.y;
     gl_PointSize *= (1.0 / - viewPosition.z);
 }
