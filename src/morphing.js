@@ -3,7 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import GUI from 'lil-gui';
-// import gsap from 'gsap';
+import gsap from 'gsap';
 import particlesVertexShader from './shaders/morphing/vertex.glsl';
 import particlesFragmentShader from './shaders/morphing/fragment.glsl';
 
@@ -98,6 +98,7 @@ let particles = null;
 // set particles outside of load to handle resize event
 gltfLoader.load('./models.glb', (gltf) => {
   const particles = {};
+  particles.index = 0;
 
   // Positions
   const positions = gltf.scene.children.map((child) => {
@@ -136,7 +137,10 @@ gltfLoader.load('./models.glb', (gltf) => {
 
   // Geometry
   particles.geometry = new THREE.BufferGeometry();
-  particles.geometry.setAttribute('position', particles.positions[1]);
+  particles.geometry.setAttribute(
+    'position',
+    particles.positions[particles.index]
+  );
   particles.geometry.setAttribute('aPositionTarget', particles.positions[3]);
 
   // Material
@@ -161,13 +165,57 @@ gltfLoader.load('./models.glb', (gltf) => {
   particles.points = new THREE.Points(particles.geometry, particles.material);
   scene.add(particles.points);
 
+  // Methods
+  particles.morph = (index) => {
+    // update attributes
+    particles.geometry.setAttribute(
+      'position',
+      particles.positions[particles.index]
+    );
+    particles.geometry.setAttribute(
+      'aPositionTarget',
+      particles.positions[index]
+    );
+
+    // animate progress
+    gsap.fromTo(
+      particles.material.uniforms.uProgress,
+      { value: 0 },
+      // ease is linear because we already have an ease on the progress in the shader
+      { value: 1, duration: 3, ease: 'linear' }
+    );
+
+    // update index
+    particles.index = index;
+  };
+  // create functions to add to gui
+  particles.morph0 = () => {
+    particles.morph(0);
+  };
+  particles.morph1 = () => {
+    particles.morph(1);
+  };
+  particles.morph2 = () => {
+    particles.morph(2);
+  };
+  particles.morph3 = () => {
+    particles.morph(3);
+  };
+
+  // add to gui
+  gui.add(particles, 'morph0');
+  gui.add(particles, 'morph1');
+  gui.add(particles, 'morph2');
+  gui.add(particles, 'morph3');
+
   // Tweaks
   gui
     .add(particles.material.uniforms.uProgress, 'value')
     .min(0)
     .max(1)
     .step(0.001)
-    .name('uProgress');
+    .name('uProgress')
+    .listen();
 });
 
 /**
