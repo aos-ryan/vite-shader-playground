@@ -155,6 +155,7 @@ gpgpu.debug = new THREE.Mesh(
   })
 );
 gpgpu.debug.position.x = 5;
+gpgpu.debug.visible = false;
 scene.add(gpgpu.debug);
 
 /**
