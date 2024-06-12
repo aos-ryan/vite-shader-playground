@@ -119,7 +119,7 @@ for (let i = 0; i < baseGeometry.count; i++) {
     baseGeometry.instance.attributes.position.array[i3 + 1];
   baseParticlesTexture.image.data[i4 + 2] =
     baseGeometry.instance.attributes.position.array[i3 + 2];
-  baseParticlesTexture.image.data[i4 + 3] = 0;
+  baseParticlesTexture.image.data[i4 + 3] = Math.random();
 }
 console.log(baseParticlesTexture.image.data);
 
@@ -136,6 +136,7 @@ gpgpu.computation.setVariableDependencies(gpgpu.particlesVariable, [
 
 // Uniforms
 gpgpu.particlesVariable.material.uniforms.uTime = new THREE.Uniform(0);
+gpgpu.particlesVariable.material.uniforms.uDeltaTime = new THREE.Uniform(0);
 // send the base particles texture (which contains the initial positions) as a uniform
 gpgpu.particlesVariable.material.uniforms.uBase = new THREE.Uniform(
   baseParticlesTexture
@@ -244,6 +245,7 @@ const tick = () => {
 
   //  update uTime in gpgpu shadermaterial
   gpgpu.particlesVariable.material.uniforms.uTime.value = elapsedTime;
+  gpgpu.particlesVariable.material.uniforms.uDeltaTime.value = deltaTime;
 
   // update gpgpu particles variable on each frame
   gpgpu.computation.compute();

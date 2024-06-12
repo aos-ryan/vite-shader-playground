@@ -1,6 +1,8 @@
 #include ../includes/simplexNoise4d.glsl
 
 uniform float uTime;
+uniform float uDeltaTime;
+
 uniform sampler2D uBase;
 
 void main()
@@ -22,10 +24,10 @@ void main()
         simplexNoise4d(vec4(particle.xyz + 2.0, time))
     );
     flowField = normalize(flowField);
-    particle.xyz += flowField * 0.01;
+    particle.xyz += flowField * uDeltaTime * 0.5;
 
     // decay
-    particle.a += 0.01;
+    particle.a += uDeltaTime * 0.3;
     };
 
     gl_FragColor = particle;
