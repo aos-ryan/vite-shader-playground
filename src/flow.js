@@ -141,6 +141,8 @@ gpgpu.particlesVariable.material.uniforms.uDeltaTime = new THREE.Uniform(0);
 gpgpu.particlesVariable.material.uniforms.uBase = new THREE.Uniform(
   baseParticlesTexture
 );
+gpgpu.particlesVariable.material.uniforms.uFlowFieldInfluence =
+  new THREE.Uniform(0.5);
 
 gpgpu.computation.init();
 
@@ -228,6 +230,12 @@ gui
   .max(1)
   .step(0.001)
   .name('uSize');
+gui
+  .add(gpgpu.particlesVariable.material.uniforms.uFlowFieldInfluence, 'value')
+  .min(0)
+  .max(1)
+  .step(0.001)
+  .name('uFlowFieldInfluence');
 
 /**
  * Animate
