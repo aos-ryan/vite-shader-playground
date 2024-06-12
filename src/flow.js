@@ -134,6 +134,13 @@ gpgpu.computation.setVariableDependencies(gpgpu.particlesVariable, [
   gpgpu.particlesVariable
 ]);
 
+// Uniforms
+gpgpu.particlesVariable.material.uniforms.uTime = new THREE.Uniform(0);
+// send the base particles texture (which contains the initial positions) as a uniform
+gpgpu.particlesVariable.material.uniforms.uBase = new THREE.Uniform(
+  baseParticlesTexture
+);
+
 gpgpu.computation.init();
 
 // DEBUG
@@ -144,7 +151,7 @@ gpgpu.debug = new THREE.Mesh(
       .texture
   })
 );
-gpgpu.debug.position.x = 3;
+gpgpu.debug.position.x = 5;
 scene.add(gpgpu.debug);
 
 /**
@@ -161,6 +168,7 @@ for (let y = 0; y < gpgpu.size; y++) {
     const i = y * gpgpu.size + x;
     const i2 = i * 2;
 
+    //  +0.5 moves the coord from bottom left corner to center
     const uvX = (x + 0.5) / gpgpu.size;
     const uvY = (y + 0.5) / gpgpu.size;
 
@@ -234,7 +242,10 @@ const tick = () => {
   // Update controls
   controls.update();
 
-  // update particles variable on each frame
+  //  update uTime in gpgpu shadermaterial
+  gpgpu.particlesVariable.material.uniforms.uTime.value = elapsedTime;
+
+  // update gpgpu particles variable on each frame
   gpgpu.computation.compute();
   particles.material.uniforms.uParticlesTexture.value =
     gpgpu.computation.getCurrentRenderTarget(gpgpu.particlesVariable).texture;
